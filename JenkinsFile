@@ -1,0 +1,66 @@
+pipeline {
+    agent any
+
+    tools {
+        // Install the Maven tool as defined in Jenkins (Manage Jenkins -> Global Tool Configuration)
+        maven 'Maven3'
+        jdk 'JDK11'
+    }
+
+    environment {
+        // Define any environment variables here
+        // For example, the name of the JAR file
+        APP_JAR = "target/my-spring-boot-app.jar"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Clone the repository from the SCM
+                git branch: 'main', url: 'https://github.com/40VMadhumithaVM/hello_world_jenkins.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                // Clean and build the project using Maven
+                sh 'mvn clean install'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                // Run unit tests using Maven
+                sh 'mvn test'
+            }
+        }
+
+        stage('Package') {
+            steps {
+                // Package the application as a JAR file
+                sh 'mvn package'
+            }
+        }
+
+        stage('Run Application') {
+            steps {
+                // Run the Spring Boot application
+                sh "nohup java -jar ${APP_JAR} &"
+            }
+        }
+    }
+
+    post {
+        always {
+            // Archive the built JAR file and any test reports
+            archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+            junit 'target/surefire-reports/*.xml'
+        }
+        success {
+            echo 'Build succeeded!'
+        }
+        failure {
+            echo 'Build failed!'
+        }
+    }
+}
