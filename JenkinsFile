@@ -38,7 +38,7 @@ pipeline {
         stage('Run Application') {
             steps {
                 // Run the Spring Boot application
-                bat "nohup java -jar ${APP_JAR} &"
+                bat "start java -jar ${APP_JAR} &"
             }
         }
     }
