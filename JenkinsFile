@@ -1,18 +1,5 @@
 pipeline {
     agent any
-
-    tools {
-        // Install the Maven tool as defined in Jenkins (Manage Jenkins -> Global Tool Configuration)
-        maven 'Maven3'
-        jdk 'JDK11'
-    }
-
-    environment {
-        // Define any environment variables here
-        // For example, the name of the JAR file
-        APP_JAR = "target/my-spring-boot-app.jar"
-    }
-
     stages {
         stage('Checkout') {
             steps {
