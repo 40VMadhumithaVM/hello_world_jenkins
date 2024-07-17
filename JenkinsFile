@@ -10,29 +10,28 @@ pipeline {
 
         stage('Build') {
             steps {
-                // Clean and build the project using Maven
-                sh 'mvn clean install'
+                bat 'mvn clean install'
             }
         }
 
         stage('Test') {
             steps {
                 // Run unit tests using Maven
-                sh 'mvn test'
+                bat 'mvn test'
             }
         }
 
         stage('Package') {
             steps {
                 // Package the application as a JAR file
-                sh 'mvn package'
+                bat 'mvn package'
             }
         }
 
         stage('Run Application') {
             steps {
                 // Run the Spring Boot application
-                sh "nohup java -jar ${APP_JAR} &"
+                bat "nohup java -jar ${APP_JAR} &"
             }
         }
     }
