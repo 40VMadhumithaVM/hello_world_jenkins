@@ -38,7 +38,8 @@ pipeline {
         stage('Run Application') {
             steps {
                 // Run the Spring Boot application
-                bat "start java -jar ${APP_JAR} &"
+                // bat "start java -jar ${APP_JAR} &"
+                    bat "mvn spring-boot:run"
             }
         }
     }
