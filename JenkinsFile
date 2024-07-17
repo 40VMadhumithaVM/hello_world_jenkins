@@ -17,8 +17,8 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Clone the repository from the SCM
-                git branch: 'main', url: 'https://github.com/40VMadhumithaVM/hello_world_jenkins.git'
-            }
+ git url: 'https://github.com/40VMadhumithaVM/hello_world_jenkins.git',
+            branch: '*/main'            }
         }
 
         stage('Build') {
