@@ -117,8 +117,8 @@ pipeline {
                 script {
                     // Stop and remove any existing container
                     bat """
-                    docker stop hello-jenkins-docker || true
-                    docker rm hello-jenkins-docker || true
+                    docker stop hello-jenkins-docker || exit 0
+                    docker rm hello-jenkins-docker || exit 0
                     """
 
                     // Run the new Docker container
