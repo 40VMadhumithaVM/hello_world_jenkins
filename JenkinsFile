@@ -82,7 +82,7 @@ pipeline {
                 // Build the Spring Boot application using Maven
                 script {
                     if (fileExists('pom.xml')) {
-                        sh 'mvn clean package -DskipTests'
+                        bat 'mvn clean package -DskipTests'
                     } else {
                         error 'No pom.xml file found'
                     }
@@ -116,13 +116,13 @@ pipeline {
             steps {
                 script {
                     // Stop and remove any existing container
-                    sh """
+                    bat """
                     docker stop springboot-app || true
                     docker rm springboot-app || true
                     """
 
                     // Run the new Docker container
-                    sh """
+                    bat """
                     docker run -d --name springboot-app -p ${APP_PORT}:${APP_PORT} ${DOCKER_IMAGE}:${env.BUILD_ID}
                     """
                 }
