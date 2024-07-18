@@ -1,60 +1,138 @@
+// pipeline {
+//     agent any
+//     environment {
+//         // Define any environment variables here
+//         // For example, the name of the JAR file
+//         APP_JAR = "target/HelloWorldJenkins-0.0.1-SNAPSHOT.jar"
+//     }
+//
+//     stages {
+//         stage('Checkout') {
+//             steps {
+//                 // Clone the repository from the SCM
+//            git branch :'main',url : 'https://github.com/40VMadhumithaVM/hello_world_jenkins.git'
+//                         }
+//         }
+//
+//         stage('Build') {
+//             steps {
+//                 // Clean and build the project using Maven
+//                 bat 'mvn clean install'
+//             }
+//         }
+//
+//         stage('Test') {
+//             steps {
+//                 // Run unit tests using Maven
+//                 bat 'mvn test'
+//             }
+//         }
+//
+//         stage('Package') {
+//             steps {
+//                 // Package the application as a JAR file
+//                 bat 'mvn package'
+//             }
+//         }
+//
+//         stage('Run Application') {
+//             steps {
+//                 // Run the Spring Boot application
+//                 // bat "start java -jar ${APP_JAR} &"
+//                     bat "mvn spring-boot:run"
+//             }
+//         }
+//     }
+//
+//     post {
+//         always {
+//             // Archive the built JAR file and any test reports
+//             archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+//             junit 'target/surefire-reports/*.xml'
+//         }
+//         success {
+//             echo 'Build succeeded!'
+//         }
+//         failure {
+//             echo 'Build failed!'
+//         }
+//     }
+// }
+
 pipeline {
     agent any
+
     environment {
-        // Define any environment variables here
-        // For example, the name of the JAR file
-        APP_JAR = "target/HelloWorldJenkins-0.0.1-SNAPSHOT.jar"
+        // Docker registry credentials
+        DOCKER_REGISTRY_CREDENTIALS = credentials('docker-hub-credentials-id')
+        DOCKER_IMAGE = 'vmadhu2711/hello-jenkins-docker'
+        APP_PORT = '8081'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Clone the repository from the SCM
-           git branch :'main',url : 'https://github.com/40VMadhumithaVM/hello_world_jenkins.git'
-                        }
-        }
-
-        stage('Build') {
-            steps {
-                // Clean and build the project using Maven
-                bat 'mvn clean install'
+                // Checkout the source code from the repository
+                checkout scm
             }
         }
 
-        stage('Test') {
+        stage('Build Spring Boot Application') {
             steps {
-                // Run unit tests using Maven
-                bat 'mvn test'
+                // Build the Spring Boot application using Maven
+                script {
+                    if (fileExists('pom.xml')) {
+                        sh 'mvn clean package -DskipTests'
+                    } else {
+                        error 'No pom.xml file found'
+                    }
+                }
             }
         }
 
-        stage('Package') {
+        stage('Build Docker Image') {
             steps {
-                // Package the application as a JAR file
-                bat 'mvn package'
+                script {
+                    // Build the Docker image
+                    def image = docker.build("${DOCKER_IMAGE}:${env.BUILD_ID}")
+                }
             }
         }
 
-        stage('Run Application') {
+        stage('Push Docker Image') {
             steps {
-                // Run the Spring Boot application
-                // bat "start java -jar ${APP_JAR} &"
-                    bat "mvn spring-boot:run"
+                script {
+                    docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials-id') {
+                        // Push the Docker image to the registry
+                        def image = docker.image("${DOCKER_IMAGE}:${env.BUILD_ID}")
+                        image.push()
+                        image.push('latest')
+                    }
+                }
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                script {
+                    // Stop and remove any existing container
+                    sh """
+                    docker stop springboot-app || true
+                    docker rm springboot-app || true
+                    """
+
+                    // Run the new Docker container
+                    sh """
+                    docker run -d --name springboot-app -p ${APP_PORT}:${APP_PORT} ${DOCKER_IMAGE}:${env.BUILD_ID}
+                    """
+                }
             }
         }
     }
 
     post {
         always {
-            // Archive the built JAR file and any test reports
-            archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-            junit 'target/surefire-reports/*.xml'
-        }
-        success {
-            echo 'Build succeeded!'
-        }
-        failure {
-            echo 'Build failed!'
+            cleanWs()
         }
     }
 }
