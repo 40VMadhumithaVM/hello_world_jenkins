@@ -66,12 +66,12 @@ pipeline {
         // Docker registry credentials
         DOCKER_REGISTRY_CREDENTIALS = credentials('docker-hub-credentials-id')
         DOCKER_IMAGE = 'vmadhu2711/hello-jenkins-docker'
-        APP_PORT = '8081'
+        APP_PORT = '8085'
     }
 
     stages {
         stage('Checkout') {
-            steps {
+             steps {
                 // Checkout the source code from the repository
                 checkout scm
             }
